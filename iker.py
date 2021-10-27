@@ -173,6 +173,7 @@ def getArguments():
 	parser.add_argument("--fullalgs", action="store_true", help="Equivalent to known sets of encalgs, hashalgs, authmethods and keygroups")
 	parser.add_argument("--ikepath", type=str, help="The FULL ike-scan path if it is not in the PATH variable and/or the name changed.")
 	parser.add_argument("-c", "--clientids", type=str, help="A file (dictionary) with a client ID per line to enumerate valid client IDs in Aggressive Mode. Default: unset - This test is not launched by default.")
+	parser.add_argument("-n", "--nofingerprint", action="store_true", help="Do not attempt to fingerprint targets.")
 
 	args = parser.parse_args()
 
@@ -602,7 +603,7 @@ def checkEncryptionAlgs(args, vpns):
 								vpns[ip]["transforms"].append(("%s, %s, %s, %s" % (enc, hsh, auth, group), transform, info))
 								fingerprintVID(args, vpns, info)
 								# If the backoff could not be fingerprinted before...
-								if not vpns[ip]["showbackoff"]:
+								if not args.nofingerprint and not vpns[ip]["showbackoff"]:
 									fingerprintShowbackoff(args, vpns, vpns[ip]["transforms"][0][0], ip)
 
 							current += 1
@@ -657,7 +658,7 @@ def checkAggressive(args, vpns):
 								vpns[ip]["aggressive"].append(("%s, %s, %s, %s" % (enc, hsh, auth, group), transform, info))
 								fingerprintVID(args, vpns, info)
 								# If the backoff could not be fingerprinted before...
-								if not vpns[ip]["showbackoff"]:
+								if not args.nofingerprint and not vpns[ip]["showbackoff"]:
 									fingerprintShowbackoff(args, vpns, vpns[ip]["aggressive"][0][0], ip)
 
 							current += 1
@@ -1514,7 +1515,8 @@ def main():
 
 	# 2. Fingerprint by checking VIDs and by analyzing the service responses
 	fingerprintVID(args, vpns)
-	fingerprintShowbackoff(args, vpns)
+	if not args.nofingerprint:
+		fingerprintShowbackoff(args, vpns)
 
 	# 3. Ciphers
 	checkEncryptionAlgs(args, vpns)
