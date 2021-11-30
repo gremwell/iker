@@ -443,33 +443,33 @@ def checkIKEv2(args, targets, vpns):
 					continue
 
 				if line[0].isdigit():
-
-					if info:
-						printMessage("\033[92m[*]\033[0m IKE version 2 is supported by %s" % ip, args.output)
-						ips.append(ip)
-						if ip in list(vpns.keys()):
-							vpns[ip]["v2"] = True
-						else:
-							printMessage("[*] IKE version 1 support was not identified in this host (%s). iker will not perform more tests against this host." % ip, args.output)
-					else:
-						printMessage("\033[91m[*]\033[0m IKE version 2 is not supported by %s" % target, args.output)
 					ip = line.split()[0]
 					info = line
 
-			if info and ip not in ips:
-				printMessage("\033[92m[*]\033[0m IKE version 2 is supported by %s" % ip, args.output)
-				if ip in list(vpns.keys()):
-					vpns[ip]["v2"] = True
+					if len(info) > 0:
+						ips.append(ip)
+						printMessage("\033[92m[*]\033[0m IKE version 2 is supported by %s" % ip, args.output)
+						if not ip in list(vpns.keys()):
+							vpns[ip] = {}
+						vpns[ip]["v2"] = True
+
+					if VERBOSE:
+						printMessage(info, args.output)
 				else:
-					printMessage("[*] IKE version 1 support was not identified in this host (%s). iker will not perform more tests against this host." % ip, args.output)
-			else:
-				printMessage("\033[91m[*]\033[0m IKE version 2 is not supported by %s" % target, args.output)
+					info = info + line
+
+			if len(info) > 0 and ip not in ips:
+				vpns[ip]["v2"] = True
+				if VERBOSE:
+					printMessage(info, args.output)
+				else:
+					printMessage("\033[91m[*]\033[0m IKE version 2 is supported by %s" % ip, args.output)
 
 		# Complete those that don't support it
 		for ip in list(vpns.keys()):
-
 			if "v2" not in list(vpns[ip].keys()):
 				vpns[ip]["v2"] = False
+				printMessage("\033[91m[*]\033[0m IKE version 2 is not supported by %s" % ip, args.output)
 	except KeyboardInterrupt:
 		waitForExit(args, vpns, ip, "v2", False)
 
